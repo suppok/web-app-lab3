@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title></title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"> </script>
+        <script type="text/javascript" src="question.json"></script>
+
+        <script>
+            let question, option1, option2, option3, option4, total, answers, selected, num_question, count=0, score=0;
+            let question_list = [], all_question_list = [], interval, elapsedTime, time=0;
+            
+            function select(questions) {
+                total = questions
+                for(i=0;i<15;i++)
+                    all_question_list[i] = i
+                for(i=0;i<total;i++) {
+                    let random = Math.floor(Math.random()*all_question_list.length)
+                    question_list[i] = all_question_list[random]
+                    all_question_list.splice(random,1)
+                }
+                document.getElementById("select_id").style.display='none'
+
+                document.getElementById("question_id").style.display='block'
+                document.getElementById("option_id").style.display='block'
+                
+                generate()
+            }
+
+            function generate() {
+                var startTime = Date.now();
+                interval = setInterval(function() {
+                    elapsedTime = Date.now() - startTime;
+                    document.getElementById("timer").innerHTML = (10 - (elapsedTime / 1000)).toFixed(1) + 's';
+                    if (elapsedTime >= 10000) {
+                        clearInterval(interval);
+                        time += elapsedTime
+                        if(count == total)
+                            show_result()
+                        else 
+                            generate()
+                    }
+                }, 100);
+
+                $.getJSON("question.json", function(result) {
+
+                    console.log("num question index : " + num_question)
+                    console.log("question_list[num_question] : " +question_list)
+                    
+                    num_question = question_list[count]
+    
+                    answers = result.questions[num_question].answer
+                    question = result.questions[num_question].question
+                    option1 = result.questions[num_question].options[0]
+                    option2 = result.questions[num_question].options[1]
+                    option3 = result.questions[num_question].options[2]
+                    option4 = result.questions[num_question].options[3]
+
+                    document.getElementById("question_id").innerHTML=question
+                    document.getElementById("option1").innerHTML=option1
+                    document.getElementById("option2").innerHTML=option2
+                    document.getElementById("option3").innerHTML=option3
+                    document.getElementById("option4").innerHTML=option4
+
+                    count++
+                });
+            }
+            
+            function answer(picked) {
+                clearInterval(interval);
+                time += elapsedTime
+                selected = picked
+                if (selected == answers){
+                    score++
+                }
+                if(count == total)
+                    show_result()
+                else 
+                    generate()
+            }
+
+            function show_result() {
+                document.getElementById("question_id").style.display='none'
+                document.getElementById("option_id").style.display='none'
+
+                document.getElementById("result_id").style.display='block'
+                document.getElementById("correct_id").innerHTML='Number of correct answers is ' + score
+                let wrong = total - score
+                document.getElementById("wrong_id").innerHTML='Number of incorrect answers is ' + wrong
+                document.getElementById("total_id").innerHTML='Total time that used is ' + (time/1000).toFixed(3) + ' seconds'
+                let avg = time/total
+                document.getElementById("avg_id").innerHTML='Average time for each question is ' + (avg/1000).toFixed(3) + ' seconds'
+            }
+
+            function play_again() {
+                document.getElementById("result_id").style.display='none'
+
+                document.getElementById("select_id").style.display='block'
+
+                question_list = []
+                all_question_list = []
+                count = 0
+                score = 0
+                total = 0
+            }
+
+        </script>
+        <style>
+            .question{
+                display: none;
+            }
+            .option{
+                display: none;
+            }
+            .result{
+                display: none;
+            }
+            button{
+                width: 100px;
+                height: 30px;
+            }
+            
+        </style>
+    </head>
+    <body style="text-align: center" background="https://i.pinimg.com/originals/7b/b3/d9/7bb3d99b8555ddc418a61fd74cc05c9e.jpg">
+        <div> 
+            <h1>Quiz by Pockyboss !!</h1>
+            <div class="select" id="select_id">
+                <button onclick="select(5)" id="button1">5 questions</button>
+                <button onclick="select(10)" id="button2">10 questions</button>
+                <button onclick="select(15)" id="button3">15 questions</button>
+            </div>
+            <div class="question" id="question_id" style="font-size:150%"></div>
+            <p></p> 
+            <div class="option" id="option_id">
+                <button onclick="answer(1)" id="option1">A</button>
+                <button onclick="answer(2)" id="option2">B</button>
+                <button onclick="answer(3)" id="option3">C</button>
+                <button onclick="answer(4)" id="option4">D</button>
+                <p></p>
+                <span id="timer" style="font-size:200%"></span>
+            </div>
+            <div class="result" id="result_id">
+                <div class="correct" id="correct_id" style="font-size:150%"></div>
+                <p></p>
+                <div class="wrong" id="wrong_id" style="font-size:150%"></div>
+                <p></p>
+                <div class="total" id="total_id" style="font-size:150%"></div>
+                <p></p>
+                <div class="avg" id="avg_id" style="font-size:150%"></div>
+                <p></p>
+                <button onclick="play_again()" id="again_id" style="font-size:110%">Play again</button>
+            </div>
+        </div>
+    </body>
+</html>
